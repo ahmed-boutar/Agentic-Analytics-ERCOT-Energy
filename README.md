@@ -66,7 +66,72 @@ A comprehensive real-time analytics platform for monitoring and analyzing the El
                 │  • Mobile-friendly design          │
                 └─────────────────────────────────────┘
 ```
+----------
 
+```
+                  ┌─────────────────────────────────────────────┐
+                  │                 Data Sources                 │
+                  │   (APIs, Market Feeds, Sensors, CSV Uploads) │
+                  └─────────────────────────────────────────────┘
+                                   │
+                                   ▼
+                      ┌──────────────────────────┐
+                      │     S3 (Bronze Layer)    │
+                      │   Raw Immutable Storage  │
+                      └──────────────────────────┘
+                                   │
+                      ┌──────────────────────────┐
+                      │ AWS Glue / Lambda (ETL) │
+                      │ Cleansing & Normalizing │
+                      └──────────────────────────┘
+                                   │
+                                   ▼
+                      ┌──────────────────────────┐
+                      │     S3 (Silver Layer)    │
+                      │  Cleaned & Standardized  │
+                      └──────────────────────────┘
+                                   │
+                      ┌──────────────────────────┐
+                      │ Glue / Athena / EMR Spark│
+                      │ Aggregation + Feature Eng │
+                      └──────────────────────────┘
+                         │                     │
+                         ▼                     ▼
+          ┌──────────────────────────┐   ┌──────────────────────────┐
+          │    S3 (Gold Layer)       │   │   Amazon RDS (Postgres)  │
+          │ Aggregated / ML Features │   │  (Last 7–14 days, UI/BI) │
+          └──────────────────────────┘   └──────────────────────────┘
+                         │
+                         ▼
+              ┌──────────────────────────┐
+              │   Amazon SageMaker Train │
+              │ (Pulls from Gold in S3)  │
+              └──────────────────────────┘
+                         │
+          ┌──────────────┼────────────────────────────────┐
+          ▼              ▼                                ▼
+┌────────────────┐  ┌────────────────────┐    ┌────────────────────────┐
+│ SageMaker       │  │ SageMaker Batch    │    │ SageMaker Endpoint     │
+│ Experiments     │  │ Transform Jobs     │    │ (Real-Time Inference)  │
+│ (Experiment     │  │ (Predictions → S3/ │    │ For UI + API Access    │
+│ Tracking, Runs) │  │ RDS for BI/Analytics) │ │                        │
+└────────────────┘  └────────────────────┘    └────────────────────────┘
+                         │
+                         ▼
+              ┌──────────────────────────┐
+              │ SageMaker Model Registry │
+              │ (Versioned Models, CI/CD │
+              │ Approval Workflow)       │
+              └──────────────────────────┘
+                         │
+                         ▼
+              ┌──────────────────────────┐
+              │ EventBridge + CloudWatch │
+              │ Orchestration, Retraining│
+              │ Triggers, Drift Detection │
+              └──────────────────────────┘
+
+```
 ## 🚀 Features
 
 ### Real-Time Grid Monitoring
